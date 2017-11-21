@@ -156,6 +156,12 @@ class Adjoint:
             self.x[i+1] = self.x[i] + (k1 + 2*k2 + 2*k3 + k4) * self.dt/6
         return self.x
     
+    def observed(self, stddev):
+        self.orbit()
+        for i in range(self.steps):
+            self.x[i] += stddev * np.random.randn()
+        return self.x
+    
     def gradient(self):
         la = np.zeros((self.steps, self.N))
         for i in range(self.steps-1, 0, -1):
@@ -207,7 +213,7 @@ def plot_orbit(dat):
     plt.show()
 
 #%%
-N = 36
+N = 4
 F = 8
 #x0 = F * np.ones(N)
 #x0[3] += 0.01
@@ -502,7 +508,7 @@ plot_orbit(x)
 
 from scipy.optimize import minimize
 
-N = 36
+N = 4
 F = 8
 T = 1.
 dt = 0.01
@@ -519,8 +525,7 @@ x[0][0] += 0.01
 
 scheme = Adjoint(lorenz.gradient, lorenz.gradient_adjoint, N, T, dt, x, y)
 
-true_orbit = np.copy(scheme.orbit())
-scheme.y = np.copy(scheme.orbit())
+scheme.y = np.copy(scheme.observed(0.01))
 print("y")
 plot_orbit(scheme.y)
 
@@ -562,7 +567,7 @@ ans = np.copy(scheme2.orbit())
 plot_orbit(ans)
 
 for j in range(N):
-    plt.plot(t,[item[j] for item in true_orbit], label='true')
+    plt.plot(t,[item[j] for item in scheme.y], label='true')
     plt.plot(t,[item[j] for item in ans], label='assimilated')
     plt.legend()
     plt.show()
