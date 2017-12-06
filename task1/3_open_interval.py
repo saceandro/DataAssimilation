@@ -164,7 +164,7 @@ for seed in seeds:
     
 #    np.savetxt("data/cov." + str(seed) + ".dat", np.cov(np.transpose(np.asarray(observed_every6h))))
     
-    np.savetxt("data/cov." + str(interval) + "." + str(seed) + ".dat", np.cov(np.transpose(np.asarray(observed_every6h))))
+    np.savetxt("data/cov." + str(interval) + "." + str(seed) + ".dat", np.cov(np.transpose(np.asarray(sparse_obs))))
     
 #    plot_orbit(np.asarray(true_orbit_every6h))
 #    plot_orbit(np.asarray(observed_every6h))

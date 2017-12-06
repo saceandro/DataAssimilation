@@ -147,23 +147,24 @@ def plot_orbit(dat):
 def compare_orbit(dat1, dat2):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    ax.plot(dat1[:,0],dat1[:,1],dat1[:,2])
-    ax.plot(dat2[:,0],dat2[:,1],dat2[:,2])
+    ax.plot(dat1[:,0],dat1[:,1],dat1[:,2],label='true orbit')
+    ax.plot(dat2[:,0],dat2[:,1],dat2[:,2],label='assimilated')
     ax.set_xlabel('$x_0$')
     ax.set_ylabel('$x_1$')
     ax.set_zlabel('$x_2$')
+    plt.legend()
     plt.show()
 
 #%%
-N = 36
+N = 40
 F = 8
-T = 1.
+T = 1
 dt = 0.01
 steps = int(T/dt) + 1
-stddev = 0.1
+stddev = 1
 
 R = np.zeros((N, N))
-np.fill_diagonal(R, 0.1)
+np.fill_diagonal(R, 1)
 
 lorenz = Lorenz96(N, F)
 rk4 = RK4(N, dt)
@@ -173,13 +174,21 @@ t = np.arange(0., T + dt, dt)
 
 x = np.zeros((steps, N))
 x[0] = F * np.ones(N)
-x[0][0] += 0.01
+x[0][0] += 2
+x[0][1] += 1
+x[0][2] += 2
+x[0][3] += 1
+#x[0][0] += 0.01
 
 true_orbit = rk4.orbit(lorenz.gradient, 0., x[0], T)
 y = rk4.observed(lorenz.gradient, 0., x[0], T, stddev)
 # plot_orbit(y)
 
 x[0] = F * np.ones(N)
+x[0][0] += 5
+x[0][1] += 4
+x[0][2] += 1
+x[0][3] += 3
 #x[0][1] += 2.
 
 P = np.zeros((steps, N, N))

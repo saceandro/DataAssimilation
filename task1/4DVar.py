@@ -161,6 +161,12 @@ class Adjoint:
         for i in range(self.steps):
             self.x[i] += stddev * np.random.randn()
         return self.x
+
+    def true_observed(self, stddev):
+        tob = np.copy(self.orbit())
+        for i in range(self.steps):
+            self.x[i] += stddev * np.random.randn()
+        return tob, self.x
     
     def gradient(self):
         la = np.zeros((self.steps, self.N))
@@ -212,6 +218,29 @@ def plot_orbit(dat):
     ax.set_zlabel('$x_2$')
     plt.show()
 
+def compare_orbit(dat1, dat2, labe1, labe2):
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.plot(dat1[:,0],dat1[:,1],dat1[:,2],label=labe1)
+    ax.plot(dat2[:,0],dat2[:,1],dat2[:,2],label=labe2)
+    ax.set_xlabel('$x_0$')
+    ax.set_ylabel('$x_1$')
+    ax.set_zlabel('$x_2$')
+    plt.legend()
+    plt.show()
+
+def compare_orbit3(dat1, dat2, dat3, labe):
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.plot(dat1[:,0],dat1[:,1],dat1[:,2],label='true orbit')
+    ax.plot(dat2[:,0],dat2[:,1],dat2[:,2],label='observed')
+    ax.plot(dat3[:,0],dat3[:,1],dat3[:,2],label=labe)
+    ax.set_xlabel('$x_0$')
+    ax.set_ylabel('$x_1$')
+    ax.set_zlabel('$x_2$')
+    plt.legend()
+    plt.show()
+    
 #%%
 N = 4
 F = 8
@@ -508,7 +537,7 @@ plot_orbit(x)
 
 from scipy.optimize import minimize
 
-N = 4
+N = 7
 F = 8
 T = 1.
 dt = 0.01
@@ -521,19 +550,29 @@ x = np.zeros((steps, N))
 y = np.zeros((steps, N))
 
 x[0] = F * np.ones(N)
-x[0][0] += 0.01
+x[0][0] += 2
+x[0][1] += 1
+x[0][2] += 2
+#x[0][3] += 1
 
 scheme = Adjoint(lorenz.gradient, lorenz.gradient_adjoint, N, T, dt, x, y)
 
-scheme.y = np.copy(scheme.observed(0.01))
+tob, obs = scheme.true_observed(1)
+scheme.y = np.copy(obs)
 print("y")
 plot_orbit(scheme.y)
 
 x_opt = F * np.ones(N)
-x_opt[2] += 0.1
+x_opt[0] += 1
+x_opt[1] += 2
+x_opt[2] += 1
+#x_opt[3] += 3
 scheme.cost(x_opt)
 print("x")
 plot_orbit(scheme.x)
+
+compare_orbit(tob, scheme.x, 'true_orbit', 'initial value')
+#compare_orbit3(tob, scheme.y, scheme.x, 'initial value')
 
 gr_anal = scheme.gradient_from_x0(x_opt)
 print (gr_anal)
@@ -571,3 +610,7 @@ for j in range(N):
     plt.plot(t,[item[j] for item in ans], label='assimilated')
     plt.legend()
     plt.show()
+
+compare_orbit(tob, ans, 'true_orbit', 'assimilated')
+#%%
+#compare_orbit3(tob, scheme.y, ans, 'assimilated')

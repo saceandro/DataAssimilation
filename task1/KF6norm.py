@@ -100,11 +100,11 @@ class KFstep:
 
     def errorCovGrad(self, t, P, x):
         M = self.model.jacobian(x)
-        return M @ P + P @ np.transpose(M)
+        return M @ P + P @ np.transpose(M) 
 
     def predict(self, xa, Pa, t):
         xf = self.intmodelx.nextstep(self.model.gradient, t, xa)
-        Pf = 1.009 * self.intmodelP.nextstep(self.errorCovGrad, t, Pa, xa) # tuning: increase Pf
+        Pf = 1.013 * self.intmodelP.nextstep(self.errorCovGrad, t, Pa, xa) # tuning: increase Pf
 #        if np.sum(Pf) > 100:
 #            Pf = np.copy(self.P0)
         return xf, Pf
@@ -247,12 +247,12 @@ for j in range(1):
     plt.show()
 
 #%%
-plt.plot(t_day_every6h, [np.linalg.norm(xa[i] - true_orbit[i*it])/N for i in range(int(len(t)/it))], label='x norm')
-plt.plot(t_day_every6h, [np.linalg.norm(Pa[i])/N for i in range(int(len(t)/it))], label='P norm')
+plt.plot(t_day_every6h, [np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) for i in range(int(len(t)/it))], label='x norm')
+plt.plot(t_day_every6h, [np.linalg.norm(Pa[i])/math.sqrt(N) for i in range(int(len(t)/it))], label='P norm')
 plt.legend()
 plt.show()
 
-print ("RMSE: ", np.mean([np.linalg.norm(xa[i] - true_orbit[i*it])/N for i in range(1000,(int(len(t)/it)))]))
+print ("RMSE: ", np.mean([np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) for i in range(1000,(int(len(t)/it)))]))
 #%%
 x = np.copy(xf)
 for i in range(steps):

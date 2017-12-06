@@ -73,6 +73,13 @@ class RK4:
             o[i] += stddev * np.random.randn()
         return o
 
+    def true_observed(self, gradient, t0, x0, T, stddev):
+        steps = int(T/self.dt) + 1
+        o = self.orbit(gradient, t0, x0, T)
+        obs = np.copy(o)
+        for i in range(steps):
+            obs[i] += stddev * np.random.randn()
+        return o, obs
 
 def plot_orbit(dat):
     fig = plt.figure()
@@ -85,34 +92,55 @@ def plot_orbit(dat):
     
     
 #%%
-N = 36
+N = 40
 F = 8
-year = 0.02
+stddev = 1
+year = 2
 day = 365 * year
 dt = 0.01
-T = int(day * 0.2 / dt)
+T = day * 0.2
 steps = int(T/dt) + 1
 
 lorenz = Lorenz96(N, F)
 rk4 = RK4(N, dt)
 
 t = np.arange(0., T + dt, dt)
+t_day = np.arange(0.,(T + dt)/0.2, dt/0.2)
 
 x0 = F * np.ones(N)
 x0[0] += 0.01
 
-true_orbit = rk4.orbit(lorenz.gradient, 0., x0, T)
-plot_orbit(true_orbit)
+true_orbit, observed = rk4.true_observed(lorenz.gradient, 0., x0, T, stddev)
 
-six_hours_t = int(0.2 / dt / 4.)
-s = int(T / six_hours_t)
+with open('year.dat', 'w') as f:
+    for i in range(int(steps/2), steps):
+        f.write(("%f "*N + "\n") % tuple(true_orbit[i,:]))
+    f.close()
 
-print ("ok")
+true_orbit_every6h = []
+with open("year6.dat", "w") as f:
+    for i in range(int(steps/2),steps,5):
+        f.write(("%f "*N + "\n") % tuple(true_orbit[i,:]))
+        true_orbit_every6h.append(true_orbit[i,:])
+    f.close()
 
-for i in range(s):
-    file = "data/" + str(i) + ".dat"
-    with open(file, "w") as f:
-        for j in range(six_hours_t):
-            f.write(("%f "*N + "\n") % tuple(true_orbit[int(T/2) + six_hours_t * s + j,:]))
-        f.close()
+observed_every6h = []
+with open("observed.dat", "w") as g:    
+    for i in range(int(steps/2),steps,5):
+        g.write(("%f "*N + "\n") % tuple(true_orbit[i,:]))
+        observed_every6h.append(observed[i,:])
+    g.close()
 
+plot_orbit(np.asarray(true_orbit_every6h))
+plot_orbit(np.asarray(observed_every6h))
+
+t_day_every6h = []
+for i in range(int(steps/2),steps,5):
+    t_day_every6h.append(t_day[i])
+
+#%%
+plt.xlabel("day")
+plt.plot(t_day_every6h[0:100],[item[0] for item in observed_every6h[0:100]], label='observed')
+plt.plot(t_day_every6h[0:100],[item[0] for item in true_orbit_every6h[0:100]], label='true_orbit')
+plt.legend()
+plt.show()
