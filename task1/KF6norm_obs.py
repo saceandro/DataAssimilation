@@ -108,7 +108,7 @@ class KFstep:
         return xf, Pf
         
     def update(self, xf, Pf, y):
-        innov = y - self.H @ xf
+        innov = self.H @ (y - xf)
         InnovCov = self.H @ Pf @ np.transpose(self.H) + self.R
         Gain = Pf @ np.transpose(self.H) @ np.linalg.inv(InnovCov)
         xa = xf + Gain @ innov
@@ -188,17 +188,25 @@ it = 5
 minute_steps = int(T/dt)
 steps = int(minute_steps/it)
 stddev = 1
+M = 30
+
+obs_index = np.random.choice(N, M, replace=False)
+
 
 true_orbit = np.loadtxt("data/year.1.dat")
 
 y = np.loadtxt("data/observed6h.1.dat")
 
-R = np.zeros((N, N))
+R = np.zeros((M, M))
 np.fill_diagonal(R, 1)
 
-H = np.zeros((N, N))
-np.fill_diagonal(H, 1)
-
+H = np.zeros((M, N))
+count = 0
+for i in obs_index:
+    H[count][i] = 1
+    count += 1
+    
+#%%
 lorenz = Lorenz96(N, F)
 rk4 = RK4(N, dt)
 rk4matrix = RK4Matrix(N, N, dt)
@@ -229,6 +237,7 @@ kf.filtering()
 compare_orbit3(true_orbit[0:len(t)], y[0:int(len(t)/it)], kf.xa[0:int(len(t)/it)], 'true orbit', 'observed', 'assimilated')
 compare_orbit(true_orbit[0:len(t)], kf.xa[0:int(len(t)/it)])
 
+#%%
 for j in range(1):
 #for j in range(N):
     plt.plot(t_day_every6h,[item[j] for item in y[0:int(len(t)/it)]], label='observed')
@@ -251,22 +260,10 @@ plt.legend()
 plt.show()
 
 print ("RMSE: ", np.mean([np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) for i in range(1000,(int(len(t)/it)))]))
-#%%
-x = np.copy(xf)
-for i in range(steps):
-    x[it*i] = xa[i]
 
-P = np.copy(Pf)
-for i in range(steps):
-    P[it*i] = Pa[i]
-#%%
-plt.plot(t_day, [np.linalg.norm(x[i] - true_orbit[i])/N for i in range(len(t))], label='x RMSE')
-plt.plot(t_day, [np.linalg.norm(P[i])/N for i in range(len(t))], label='P RMSE')
-plt.legend()
-plt.show()
 
 ##%%
-#plt.plot([i for i in range(99,111)], [np.linalg.norm(x[i] - true_orbit[i])/N for i in range(99,111)], label='x norm')
-#plt.plot([i for i in range(99,111)], [np.linalg.norm(P[i])/N for i in range(99,111)], label='P norm')
+#plt.plot([i for i in range(7000,7051)], [np.linalg.norm(x[i] - true_orbit[i])/N for i in range(7000,7051)], label='x norm')
+#plt.plot([i for i in range(7000,7051)], [np.linalg.norm(P[i])/N for i in range(7000,7051)], label='P norm')
 #plt.legend()
 #plt.show()
