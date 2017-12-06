@@ -133,7 +133,7 @@ class Var3Dstep:
 
     def predict(self, xa, Pa, t):
         xf = self.intmodelx.nextstep(self.model.gradient, t, xa)
-        Pf = Pa # tuning: increase Pf
+        Pf = Pa # P is fixed to B
         return xf, Pf
         
     def update(self, xf, Pf, y):
@@ -141,7 +141,7 @@ class Var3Dstep:
         InnovCov = self.H @ Pf @ np.transpose(self.H) + self.R
         Gain = Pf @ np.transpose(self.H) @ np.linalg.inv(InnovCov)
         xa = xf + Gain @ innov
-        Pa = Pf - Gain @ self.H @ Pf
+        Pa = Pf # P is fixed to B
         return xa, Pa
         
     def step(self, xa, Pa, y, t, it):
@@ -218,10 +218,9 @@ it = 5
 minute_steps = int(T/dt)
 steps = int(minute_steps/it)
 stddev = 1
-M = 30
+M = 40
 
 obs_index = np.random.choice(N, M, replace=False)
-
 
 true_orbit = np.loadtxt("data/year.1.dat")
 
@@ -253,14 +252,20 @@ xf[0] = np.loadtxt("data/assimilation_xzero.2.dat")
 xa = np.zeros((steps, N))
 
 Pf = np.zeros((minute_steps, N, N))
-Pf[0] = np.loadtxt("data/cov.1.dat")
+np.fill_diagonal(Pf[0], 1)
 
 Pa = np.zeros((steps, N, N))
 
-var3d_step = KFstep(lorenz, rk4, rk4matrix, N, dt, R, H)
+
+#Pf = np.zeros((minute_steps, N, N))
+#Pf[0] = np.loadtxt("data/cov.1.dat")
+#
+#Pa = np.zeros((steps, N, N))
+
+var3d_step = Var3Dstep(lorenz, rk4, rk4matrix, N, dt, R, H)
 var3d = KF(var3d_step, T, dt, xf, Pf, xa, Pa, y, it)
 
-kf.filtering()
+var3d.filtering()
 
 compare_orbit3(true_orbit[0:len(t)], y[0:int(len(t)/it)], var3d.xa[0:int(len(t)/it)], 'true orbit', 'observed', 'assimilated')
 compare_orbit(true_orbit[0:len(t)], var3d.xa[0:int(len(t)/it)])
