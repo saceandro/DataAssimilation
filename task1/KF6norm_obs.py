@@ -100,7 +100,7 @@ class KFstep:
 
     def errorCovGrad(self, t, P, x):
         M = self.model.jacobian(x)
-        return M @ P @ np.transpose(M) # fixed
+        return M @ P + P @ np.transpose(M)
 
     def predict(self, xa, Pa, t):
         xf = self.intmodelx.nextstep(self.model.gradient, t, xa)
