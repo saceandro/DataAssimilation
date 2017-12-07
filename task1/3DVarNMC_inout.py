@@ -6,9 +6,6 @@ Created on Tue Nov 14 17:01:40 2017
 @author: yk
 """
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-
 import numpy as np
 import math
 
