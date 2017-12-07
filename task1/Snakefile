@@ -10,16 +10,20 @@ def execcommand(cmd,stdout,stderr,input=""):
     return o,e
 
 obs = [str(i) for i in range(1,41,5)]
+member = [str(i) for i in range(8,81,10)]
+member += [str(i) for i in range(100, 1001, 100)]
 
 rule all:
     input:
         expand('3dvarnmc_data/{param}', param=obs),
-        expand('kf6norm_obs_data/{param}', param=obs)
+        expand('kf6norm_obs_data/{param}', param=obs),
+        expand('po_obs_data/{param}', param=obs),
+        expand('po_obs_data/{member}', param=member)
 
 # rulename should not be begin by numbers
 rule var3dnmc:
     params:
-        1
+        2
     output:
         '3dvarnmc_data/{a}'
     log:
@@ -29,10 +33,30 @@ rule var3dnmc:
 
 rule kf6norm_obs:
     params:
-        1
+        2
     output:
         'kf6norm_obs_data/{a}'
     log:
         'kf6norm_obs_log/{a}'
     run:
         execcommand(expand('./KF6norm_obs_inout.py {n}', n={wildcards.a}), output[0], log[0])
+
+rule po_obs:
+    params:
+        3
+    output:
+        'po_obs_data/{a}'
+    log:
+        'po_obs_log/{a}'
+    run:
+        execcommand(expand('./PO_obs_inout.py {n}', n={wildcards.a}), output[0], log[0])
+
+rule po_member:
+    params:
+        3
+    output:
+        'po_member_data/{a}'
+    log:
+        'po_member_log/{a}'
+    run:
+        execcommand(expand('./PO_member_inout.py {n}', n={wildcards.a}), output[0], log[0])
