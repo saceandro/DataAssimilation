@@ -71,7 +71,8 @@ class RK4:
         steps = int(T/self.dt)
         o = self.orbit(gradient, t0, x0, T)
         for i in range(steps):
-            o[i] += stddev * rng.randn()
+            for j in range(self.N):                
+                o[i][j] += stddev * rng.randn()
         return o
 
     def true_observed(self, gradient, t0, x0, T, stddev, rng):
@@ -79,7 +80,8 @@ class RK4:
         o = self.orbit(gradient, t0, x0, T)
         obs = np.copy(o)
         for i in range(steps):
-            obs[i] += stddev * rng.randn()
+            for j in range(self.N):
+                obs[i][j] += stddev * rng.randn()
         return o, obs
 
 def plot_orbit(dat):
@@ -95,13 +97,13 @@ def plot_orbit(dat):
 #%%
 N = 40
 F = 8
-stddev = 1
+stddev = 1.
 year = 2
 day = 365 * year
 dt = 0.01
 T = day * 0.2
 steps = int(T/dt)
-interval = 10
+interval = 5
 
 lorenz = Lorenz96(N, F)
 rk4 = RK4(N, dt)
@@ -118,6 +120,8 @@ for seed in seeds:
     x0[rng.randint(N)] += 0.1*rng.randn()
     
     true_orbit, observed = rk4.true_observed(lorenz.gradient, 0., x0, T, stddev, rng)
+    
+    print ("observation RMSE: ", np.mean([np.linalg.norm(observed[i] - true_orbit[i])/math.sqrt(N) for i in range(steps)]))
     
     assimilation_xzero = observed[rng.randint(len(observed))]
     with open('data/assimilation_xzero.' + str(seed) + '.dat', 'w') as ff:

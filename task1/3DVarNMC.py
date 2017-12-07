@@ -224,7 +224,7 @@ obs_index = np.random.choice(N, M, replace=False)
 
 true_orbit = np.loadtxt("data/year.1.dat")
 
-y = np.loadtxt("data/observed6h.1.dat")
+y = np.loadtxt("data/observed." + str(it) + ".1.dat")
 
 R = np.zeros((M, M))
 np.fill_diagonal(R, 1)
@@ -325,6 +325,16 @@ plt.legend()
 plt.show()
 
 print ("RMSE: ", np.mean([np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) for i in range(1000,(int(len(t)/it)))]))
+
+#%%
+plt.plot(t_day_every6h, [np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) for i in range(int(len(t)/it))], label='x assimilation norm')
+plt.plot(t_day_every6h, [np.linalg.norm(y[i] - true_orbit[i*it])/math.sqrt(N) for i in range(int(len(t)/it))], label='x observation norm')
+plt.plot(t_day_every6h, [np.linalg.norm(Pa[i])/math.sqrt(N) for i in range(int(len(t)/it))], label='P norm')
+plt.legend()
+plt.show()
+
+print ("assimilation RMSE: ", np.mean([np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) for i in range(1000,(int(len(t)/it)))]))
+print ("observation RMSE: ", np.mean([np.linalg.norm(y[i] - true_orbit[i*it])/math.sqrt(N) for i in range(1000,(int(len(t)/it)))]))
 
 
 ##%%

@@ -188,14 +188,14 @@ it = 5
 minute_steps = int(T/dt)
 steps = int(minute_steps/it)
 stddev = 1
-M = 30
+M = 40
 
 obs_index = np.random.choice(N, M, replace=False)
 
 
 true_orbit = np.loadtxt("data/year.1.dat")
 
-y = np.loadtxt("data/observed6h.1.dat")
+y = np.loadtxt("data/observed." + str(it) + ".1.dat")
 
 R = np.zeros((M, M))
 np.fill_diagonal(R, 1)
@@ -223,7 +223,7 @@ xf[0] = np.loadtxt("data/assimilation_xzero.2.dat")
 xa = np.zeros((steps, N))
 
 Pf = np.zeros((minute_steps, N, N))
-Pf[0] = np.loadtxt("data/cov.1.dat")
+Pf[0] = np.loadtxt("data/cov." + str(it) + ".1.dat")
 
 Pa = np.zeros((steps, N, N))
 
@@ -255,12 +255,21 @@ for j in range(1):
 
 #%%
 plt.plot(t_day_every6h, [np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) for i in range(int(len(t)/it))], label='x norm')
-plt.plot(t_day_every6h, [np.linalg.norm(Pa[i])/math.sqrt(N) for i in range(int(len(t)/it))], label='P norm')
+plt.plot(t_day_every6h, [np.linalg.norm(Pa[i].diagonal())/math.sqrt(N) for i in range(int(len(t)/it))], label='P norm')
 plt.legend()
 plt.show()
 
 print ("RMSE: ", np.mean([np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) for i in range(1000,(int(len(t)/it)))]))
 
+#%%
+plt.plot(t_day_every6h, [np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) for i in range(int(len(t)/it))], label='x assimilation norm')
+plt.plot(t_day_every6h, [np.linalg.norm(y[i] - true_orbit[i*it])/math.sqrt(N) for i in range(int(len(t)/it))], label='x observation norm')
+plt.plot(t_day_every6h, [np.linalg.norm(Pa[i])/math.sqrt(N) for i in range(int(len(t)/it))], label='P norm')
+plt.legend()
+plt.show()
+
+print ("assimilation RMSE: ", np.mean([np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) for i in range(1000,(int(len(t)/it)))]))
+print ("observation RMSE: ", np.mean([np.linalg.norm(y[i] - true_orbit[i*it])/math.sqrt(N) for i in range(1000,(int(len(t)/it)))]))
 
 ##%%
 #plt.plot([i for i in range(7000,7051)], [np.linalg.norm(x[i] - true_orbit[i])/N for i in range(7000,7051)], label='x norm')
