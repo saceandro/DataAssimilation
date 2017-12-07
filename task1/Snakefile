@@ -10,15 +10,15 @@ def execcommand(cmd,stdout,stderr,input=""):
     return o,e
 
 obs = [str(i) for i in range(1,41,5)]
-member = [str(i) for i in range(8,81,10)]
-member += [str(i) for i in range(100, 1001, 100)]
+enmember = [str(i) for i in range(8,81,10)]
+enmember += [str(i) for i in range(100, 1001, 100)]
 
 rule all:
     input:
         expand('3dvarnmc_data/{param}', param=obs),
         expand('kf6norm_obs_data/{param}', param=obs),
         expand('po_obs_data/{param}', param=obs),
-        expand('po_obs_data/{member}', param=member)
+        expand('po_obs_data/{enmember}', param=enmember)
 
 # rulename should not be begin by numbers
 rule var3dnmc:
@@ -51,7 +51,7 @@ rule po_obs:
     run:
         execcommand(expand('./PO_obs_inout.py {n}', n={wildcards.a}), output[0], log[0])
 
-rule po_member:
+rule po_enmember:
     params:
         3
     output:
