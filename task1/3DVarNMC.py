@@ -320,7 +320,9 @@ for j in range(1):
 
 #%%
 plt.plot(t_day_every6h, [np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) for i in range(int(len(t)/it))], label='x norm')
-plt.plot(t_day_every6h, [np.linalg.norm(Pa[i])/math.sqrt(N) for i in range(int(len(t)/it))], label='P norm')
+plt.plot(t_day_every6h, [np.linalg.norm(Pa[i].diagonal())/math.sqrt(N) for i in range(int(len(t)/it))], label='P trace norm')
+plt.fill_between(t_day_every6h, xa[0:int(len(t)/it),j] - np.sqrt(Pa[0:int(len(t)/it),j,j]),
+                 xa[0:int(len(t)/it),j] + np.sqrt(Pa[0:int(len(t)/it),j,j]), color="#3F5D7D", alpha=0.5)
 plt.legend()
 plt.show()
 
@@ -329,7 +331,7 @@ print ("RMSE: ", np.mean([np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) 
 #%%
 plt.plot(t_day_every6h, [np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) for i in range(int(len(t)/it))], label='x assimilation norm')
 plt.plot(t_day_every6h, [np.linalg.norm(y[i] - true_orbit[i*it])/math.sqrt(N) for i in range(int(len(t)/it))], label='x observation norm')
-plt.plot(t_day_every6h, [np.linalg.norm(Pa[i])/math.sqrt(N) for i in range(int(len(t)/it))], label='P norm')
+plt.plot(t_day_every6h, [np.linalg.norm(Pa[i].diagonal())/math.sqrt(N) for i in range(int(len(t)/it))], label='P trace norm')
 plt.legend()
 plt.show()
 

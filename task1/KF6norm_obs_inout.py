@@ -194,7 +194,7 @@ obs_index = np.random.choice(N, M, replace=False)
 
 true_orbit = np.loadtxt("data/year.1.dat")
 
-y = np.loadtxt("data/observed6h.1.dat")
+y = np.loadtxt("data/observed." + str(it) + ".1.dat")
 
 R = np.zeros((M, M))
 np.fill_diagonal(R, 1)
@@ -222,7 +222,7 @@ xf[0] = np.loadtxt("data/assimilation_xzero.2.dat")
 xa = np.zeros((steps, N))
 
 Pf = np.zeros((minute_steps, N, N))
-Pf[0] = np.loadtxt("data/cov.1.dat")
+Pf[0] = np.loadtxt("data/cov." + str(it) + ".1.dat")
 
 Pa = np.zeros((steps, N, N))
 

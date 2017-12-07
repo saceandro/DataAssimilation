@@ -9,7 +9,7 @@ def execcommand(cmd,stdout,stderr,input=""):
         outf.close()
     return o,e
 
-obs = [str(i) for i in range(1,41)]
+obs = [str(i) for i in range(1,41,5)]
 
 rule all:
     input:

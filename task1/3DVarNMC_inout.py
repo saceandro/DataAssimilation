@@ -223,7 +223,7 @@ obs_index = np.random.choice(N, M, replace=False)
 
 true_orbit = np.loadtxt("data/year.1.dat")
 
-y = np.loadtxt("data/observed6h.1.dat")
+y = np.loadtxt("data/observed." + str(it) + ".1.dat")
 
 R = np.zeros((M, M))
 np.fill_diagonal(R, 1)
