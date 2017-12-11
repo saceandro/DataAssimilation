@@ -240,6 +240,7 @@ compare_orbit(true_orbit[0:len(t)], kf.xa[0:int(len(t)/it)])
 #%%
 for j in range(1):
 #for j in range(N):
+    fig = plt.figure()
     plt.plot(t_day_every6h,[item[j] for item in y[0:int(len(t)/it)]], label='observed')
     plt.plot(t_day,[item[j] for item in true_orbit[0:len(t)]], label='true')
     plt.plot(t_day_every6h,[item[j] for item in kf.xa[0:int(len(t)/it)]], label='assimilated')
@@ -248,35 +249,45 @@ for j in range(1):
 #%%
 for j in range(1):
 #for j in range(N):
+    fig = plt.figure()
     plt.plot(t_day,true_orbit[0:len(t),j], label='true')
     plt.plot(t_day_every6h,kf.xa[0:int(len(t)/it),j], label='assimilated')
     plt.fill_between(t_day_every6h, kf.xa[0:int(len(t)/it),j] - np.sqrt(kf.Pa[0:int(len(t)/it),j,j]),
                  kf.xa[0:int(len(t)/it),j] + np.sqrt(kf.Pa[0:int(len(t)/it),j,j]), color="#3F5D7D", alpha=0.5)
+    plt.xlabel('day')
+    plt.ylabel('$x_'+str(j) + '$')
     plt.legend()
     plt.show()
 
 #%%
 for j in range(1):
 #for j in range(N):
+    fig = plt.figure()
     plt.plot(t_day[0:100],true_orbit[0:100,j], label='true')
     plt.plot(t_day_every6h[0:20],kf.xa[0:20,j], label='assimilated')
     plt.fill_between(t_day_every6h[0:20], kf.xa[0:20,j] - np.sqrt(kf.Pa[0:20,j,j]),
                  kf.xa[0:20,j] + np.sqrt(kf.Pa[0:20,j,j]), color="#3F5D7D",alpha=0.3)
+    plt.xlabel('day')
+    plt.ylabel('$x_'+str(j) + '$')
     plt.legend()
     plt.show()
 
 #%%
+fig = plt.figure()
 plt.plot(t_day_every6h, [np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) for i in range(int(len(t)/it))], label='x norm')
-plt.plot(t_day_every6h, [np.linalg.norm(Pa[i].diagonal())/math.sqrt(N) for i in range(int(len(t)/it))], label='P trace norm')
+plt.plot(t_day_every6h, [np.sqrt(np.trace(Pa[i])/N) for i in range(int(len(t)/it))], label='P trace norm')
+plt.xlabel('day')
+plt.ylabel('RMSE')
 plt.legend()
 plt.show()
 
 print ("RMSE: ", np.mean([np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) for i in range(1000,(int(len(t)/it)))]))
 
 #%%
+fig = plt.figure()
 plt.plot(t_day_every6h, [np.linalg.norm(xa[i] - true_orbit[i*it])/math.sqrt(N) for i in range(int(len(t)/it))], label='x assimilation norm')
 plt.plot(t_day_every6h, [np.linalg.norm(y[i] - true_orbit[i*it])/math.sqrt(N) for i in range(int(len(t)/it))], label='x observation norm')
-plt.plot(t_day_every6h, [np.linalg.norm(Pa[i].diagonal())/math.sqrt(N) for i in range(int(len(t)/it))], label='P trace norm')
+plt.plot(t_day_every6h, [np.sqrt(np.trace(Pa)/N) for i in range(int(len(t)/it))], label='P trace norm')
 plt.legend()
 plt.show()
 

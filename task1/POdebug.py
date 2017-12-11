@@ -164,7 +164,7 @@ minute_steps = int(T/dt)
 steps = int(minute_steps/it)
 stddev = 1
 M = 40
-m = 1000
+m = 200
 seed = 1
 
 rng = np.random.RandomState(seed)
@@ -239,6 +239,10 @@ for j in range(1):
 #for j in range(N):
     plt.plot(t_day,[item[j] for item in true_orbit[0:len(t)]], label='true')
     plt.plot(t_day_every6h,[item[j] for item in po.xa_mean[0:int(len(t)/it)]], label='assimilated')
+    plt.fill_between(t_day_every6h, po.xa_mean[0:int(len(t)/it),j] - np.sqrt(Pa[0:int(len(t)/it),j,j]),
+                 po.xa_mean[0:int(len(t)/it),j] + np.sqrt(Pa[0:int(len(t)/it),j,j]), color="#3F5D7D", alpha=0.3)
+    plt.xlabel('day')
+    plt.ylabel('$x_'+str(j) + '$')
     plt.legend()
     plt.show()
 
@@ -262,7 +266,9 @@ for j in range(1):
 
 #%%
 plt.plot(t_day_every6h, [np.linalg.norm(po.xa_mean[i] - true_orbit[i*it])/math.sqrt(N) for i in range(int(len(t)/it))], label='x norm')
-plt.plot(t_day_every6h, [np.linalg.norm(Pa[i].diagonal())/math.sqrt(N) for i in range(int(len(t)/it))], label='P norm')
+plt.plot(t_day_every6h, [np.sqrt(np.trace(Pa[i])/N) for i in range(int(len(t)/it))], label='P trace norm')
+plt.xlabel('day')
+plt.ylabel('RMSE')
 plt.legend()
 plt.show()
 

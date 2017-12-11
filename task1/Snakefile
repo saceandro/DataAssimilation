@@ -60,3 +60,7 @@ rule po_enmember:
         'po_member_log/{a}'
     run:
         execcommand(expand('./PO_member_inout.py {n}', n={wildcards.a}), output[0], log[0])
+
+rule rm:
+    shell:
+        "rm -f 3dvarnmc_data/* kf6_norm_data/* po_obs_data/*, po_member_data/*"
