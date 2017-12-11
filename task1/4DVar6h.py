@@ -119,7 +119,7 @@ class AdjointRungeKutta4:
         self.dt = dt
         self.x = x
         self.y = y
-        self.steps = int(T/self.dt) + 1
+        self.steps = int(T/self.dt)
         
     def orbit_adjoint(self):
         la = np.zeros((self.steps, N))
@@ -145,7 +145,7 @@ class Adjoint:
         self.dt = dt
         self.x = x
         self.y = y
-        self.steps = int(T/self.dt) + 1
+        self.steps = int(T/self.dt)
         
     def orbit(self):
         for i in range(self.steps-1):
@@ -247,11 +247,14 @@ from scipy.optimize import minimize
 
 N = 40
 F = 8
-T = 0.1
+year = 1
+day = 365 * year
 dt = 0.01
+T = day * 0.2
 it = 5
 minute_steps = int(T/dt)
 steps = int(minute_steps/it)
+stddev = 1
 
 lorenz = Lorenz96(N, F)
 
@@ -259,18 +262,18 @@ tob = np.loadtxt("data/year.1.dat")
 
 obs = np.loadtxt("data/observed." + str(it) + ".1.dat")
 
-t = np.arange(0., T + dt, dt)
+t = np.arange(0., T, dt)
 
-x_opt = F * np.ones(N)
-x_opt[0] = np.loadtxt("data/assimilation_xzero.2.dat")
+x_opt = np.loadtxt("data/assimilation_xzero.2.dat")
 
-scheme = Adjoint(lorenz.gradient, lorenz.gradient_adjoint, N, T, dt, x_opt, obs)
+x = np.zeros((minute_steps,N))
+scheme = Adjoint(lorenz.gradient, lorenz.gradient_adjoint, N, T, dt, x, obs)
 
 plot_orbit(obs)
 
-scheme.cost(scheme.x_opt)
+scheme.cost(x_opt)
 print("x")
-plot_orbit(scheme.x_opt)
+plot_orbit(scheme.x)
 compare_orbit(tob, scheme.x, 'true_orbit', 'initial value')
 #compare_orbit3(tob, scheme.y, scheme.x, 'initial value')
 
@@ -281,11 +284,11 @@ print (res)
 #plot_orbit(scheme.x)
 
 for j in range(N):
-    plt.plot(t, scheme.y[:,0], label='true orbit')
-    plt.plot(t, tob[:,0], label='assimilated')
+    plt.plot(t, scheme.y[0:minute_steps,0], label='true orbit')
+    plt.plot(t, tob[0:minute_steps:,0], label='assimilated')
     plt.legend()
     plt.show()
 
-compare_orbit(tob, res.x, 'true_orbit', 'assimilated')
+compare_orbit(tob[0:minute_steps], scheme.x, 'true_orbit', 'assimilated')
 #%%
 #compare_orbit3(tob, scheme.y, ans, 'assimilated')
