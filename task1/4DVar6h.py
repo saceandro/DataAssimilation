@@ -247,9 +247,9 @@ from scipy.optimize import minimize
 
 N = 40
 F = 8
-year = 1
+year = 0.01
 day = 365 * year
-dt = 0.01
+dt = 0.05
 T = day * 0.2
 it = 5
 minute_steps = int(T/dt)
