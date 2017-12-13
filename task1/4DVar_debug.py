@@ -70,7 +70,7 @@ class Lorenz96:
                     m[j][i] -= x[(i-1) % self.N]
                 if ((i     % self.N) == (j % self.N)):
                     m[j][i] -= 1
-        gr = -m @ la - (x - y)
+        gr = m @ la + (x - y)
         return gr
 
 class RungeKutta4:
@@ -128,7 +128,7 @@ class AdjointRungeKutta4:
             k2 = handler(self.callback, i - self.dt/2, la[i] + k1*self.dt/2, self.x[i], self.y[i])
             k3 = handler(self.callback, i - self.dt/2, la[i] + k2*self.dt/2, self.x[i], self.y[i])
             k4 = handler(self.callback, i - self.dt  , la[i] + k3*self.dt, self.x[i], self.y[i])
-            la[i-1] = la[i] - (k1 + 2*k2 + 2*k3 + k4) * self.dt/6
+            la[i-1] = la[i] + (k1 + 2*k2 + 2*k3 + k4) * self.dt/6
         return la
     
     def minimizer_gradient(self):
@@ -177,7 +177,7 @@ class Adjoint:
             k2 = handler(self.dla, la[i] - k1*self.dt/2, self.x[i], self.y[i])
             k3 = handler(self.dla, la[i] - k2*self.dt/2, self.x[i], self.y[i])
             k4 = handler(self.dla, la[i] - k3*self.dt,   self.x[i], self.y[i])
-            la[i-1] = la[i] - (k1 + 2*k2 + 2*k3 + k4) * self.dt/6
+            la[i-1] = la[i] + (k1 + 2*k2 + 2*k3 + k4) * self.dt/6
         return la[0]
 
     def gradient_from_x0(self, x0):
@@ -189,7 +189,7 @@ class Adjoint:
             k2 = handler(self.dla, la[i] - k1*self.dt/2, self.x[i], self.y[i])
             k3 = handler(self.dla, la[i] - k2*self.dt/2, self.x[i], self.y[i])
             k4 = handler(self.dla, la[i] - k3*self.dt,   self.x[i], self.y[i])
-            la[i-1] = la[i] - (k1 + 2*k2 + 2*k3 + k4) * self.dt/6
+            la[i-1] = la[i] + (k1 + 2*k2 + 2*k3 + k4) * self.dt/6
         return la[0]
     
     def cost(self, x0):
@@ -199,7 +199,7 @@ class Adjoint:
     #    cost = (xzero - xb) * (np.linalg.inv(B)) * (xzero - xb)
         for i in range(self.steps):
             cost += (self.x[i] - self.y[i]) @ (self.x[i] - self.y[i])
-        return cost
+        return cost/2.0 # fixed
     
     def numerical_gradient_from_x0(self,x0,h):
         gr = np.zeros(N)
@@ -541,7 +541,7 @@ from scipy.optimize import minimize
 
 N = 7
 F = 8
-T = 1.
+T = 0.1
 dt = 0.01
 steps = int(T/dt) + 1
 

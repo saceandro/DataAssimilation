@@ -44,102 +44,6 @@ class Lorenz96:
         gr = -m @ la - (x - y)
         return gr
 
-
-class RK4:
-    def __init__(self, N, dt):
-        self.N = N
-        self.dt = dt
-
-    def nextstep(self, gradient, t, x):
-        k1 = handler(gradient, t, x)
-        k2 = handler(gradient, t + self.dt/2, x + k1*self.dt/2)
-        k3 = handler(gradient, t + self.dt/2, x + k2*self.dt/2)
-        k4 = handler(gradient, t + self.dt  , x + k3*self.dt)
-        return x + (k1 + 2*k2 + 2*k3 + k4) * self.dt/6
-    
-    def orbit(self, gradient, t0, x0, T):
-        t = np.arange(0., T, dt)
-        steps = int(T/self.dt)
-        o = np.zeros((steps,self.N))
-        o[0] = np.copy(x0)
-        for i in range(1,steps):
-            o[i] = self.nextstep(gradient, t[i], o[i-1])
-        return o
-
-    def observed(self, gradient, t0, x0, T, stddev):
-        steps = int(T/self.dt)
-        o = self.orbit(gradient, t0, x0, T)
-        for i in range(steps):
-            o[i] += stddev * np.random.randn()
-        return o
-
-
-class RK4Matrix:
-    def __init__(self, M, N, dt):
-        self.M = M
-        self.N = N
-        self.dt = dt
-        
-    def nextstep(self, gradient, t, x, pa):
-        k1 = handler(gradient, t, x, pa)
-        k2 = handler(gradient, t + self.dt/2, x + k1*self.dt/2, pa)
-        k3 = handler(gradient, t + self.dt/2, x + k2*self.dt/2, pa)
-        k4 = handler(gradient, t + self.dt  , x + k3*self.dt, pa)
-        return x + (k1 + 2*k2 + 2*k3 + k4) * self.dt/6            
-
-class Var3Dstep:
-    def __init__(self, model, intmodelx, intmodelP, N, dt, R, H):
-        self.model = model
-        self.intmodelx = intmodelx
-        self.intmodelP = intmodelP
-        self.N = N
-        self.dt = dt
-        self.R = R
-        self.H = H
-
-    def predict(self, xa, Pa, t):
-        xf = self.intmodelx.nextstep(self.model.gradient, t, xa)
-        Pf = Pa # P is fixed to B
-        return xf, Pf
-        
-    def update(self, xf, Pf, y):
-        innov = self.H @ (y - xf)
-        InnovCov = self.H @ Pf @ np.transpose(self.H) + self.R
-        Gain = Pf @ np.transpose(self.H) @ np.linalg.inv(InnovCov)
-        xa = xf + Gain @ innov
-        Pa = Pf # P is fixed to B
-        return xa, Pa
-        
-    def step(self, xa, Pa, y, t, it):
-        for i in range(it):
-            xa, Pa = self.predict(xa, Pa, t) # LHS means xf, Pf
-        return self.update(xa, Pa, y) # RHS means xf, Pf
-
-class KF:
-    def __init__(self, kfstep, T, dt, xf, Pf, xa, Pa, y, it):
-        self.kfstep = kfstep
-        self.xf = xf
-        self.Pf = Pf
-        self.xa = xa
-        self.Pa = Pa
-        self.y = y
-        self.it = it
-        self.steps = int(T/dt/it)
-        
-    def filtering(self):
-        t = np.arange(0., T, dt)
-        k = 0
-        self.xa[0], self.Pa[0] = self.kfstep.update(self.xf[0], self.Pf[0], y[0])
-        for i in range(1, self.steps):
-            self.xf[k+1], self.Pf[k+1] = self.kfstep.predict(self.xa[i-1], self.Pa[i-1], t[k])
-            k += 1
-            for j in range(1, self.it):
-                self.xf[k+1], self.Pf[k+1] = self.kfstep.predict(self.xf[k], self.Pf[k], t[k])
-                k += 1
-            self.xa[i], self.Pa[i] = self.kfstep.update(self.xf[k], self.Pf[k], y[i])
-        return self.xf, self.Pf, self.xa, self.Pa
-
-
 class RungeKutta4:
     def __init__(self, callback, N, dt, t, x):
         self.callback = callback
@@ -264,7 +168,7 @@ class Adjoint:
     #    cost = (xzero - xb) * (np.linalg.inv(B)) * (xzero - xb)
         for i in range(self.steps):
             cost += (self.x[i] - self.y[i]) @ (self.x[i] - self.y[i])
-        return cost
+        return cost # fixed
     
     def numerical_gradient_from_x0(self,x0,h):
         gr = np.zeros(N)
@@ -315,86 +219,33 @@ from scipy.optimize import minimize
 N = 40
 F = 8
 year = 0.03
+
+
 day = 365 * year
 dt = 0.05
 T = day * 0.2
 it = 5
 minute_steps = int(T/dt)
 steps = int(minute_steps/it)
+
 stddev = 1
-M = 40
 
 lorenz = Lorenz96(N, F)
-rk4 = RK4(N, dt)
-rk4matrix = RK4Matrix(N, N, dt)
 
-t = np.arange(0., T-dt, dt)
-
-t_day = np.copy(t)/0.2
-t_day_every6h = []
-for i in range(0,minute_steps,it):
-    t_day_every6h.append(t_day[i])
-
-xf = np.zeros((minute_steps, N))
-xf[0] = np.loadtxt("data/assimilation_xzero.2.dat")
-
-xa = np.zeros((steps, N))
-
-Pf = np.zeros((minute_steps, N, N))
-np.fill_diagonal(Pf[0], 1)
-
-Pa = np.zeros((steps, N, N))
-
-R = np.zeros((M, M))
-np.fill_diagonal(R, 1)
-
-H = np.zeros((N, N))
-
-var3d_step = Var3Dstep(lorenz, rk4, rk4matrix, N, dt, R, H)
-
-y = np.loadtxt("data/observed." + str(it) + ".1.dat")
-var3d = KF(var3d_step, T, dt, xf, Pf, xa, Pa, y, it)
-
-#%%
-samples = 100
-h24 = 0.2
-h24_minute_steps = int(h24/dt)
-h24_steps = int(h24_minute_steps/it)
-xa_index = np.random.choice(steps-48*h24_minute_steps, samples, replace=False)
-
-eps = np.zeros((samples, N))
-count2 = 0
-for i in xa_index:
-    xa0 = np.zeros((2*h24_minute_steps, N))
-    xa0[0] = np.copy(xa[i])
-    xa24 = np.zeros((h24_minute_steps, N))
-    xa24[0] = np.copy(xa[i + h24_steps])
-    
-    for j in range(1, 2*h24_minute_steps):
-        xa0[j], Pa[j] = var3d_step.predict(xa0[j-1], Pf[0], t[i + j])
-    
-    for j in range(1, h24_minute_steps):
-        xa24[j], Pa[j] = var3d_step.predict(xa0[j-1], Pf[0], t[i + j])
-    
-    eps[count2] = xa0[-1] - xa24[-1]
-    count2 += 1
-    
-#%%
-alpha = 0.02
-B = alpha * np.cov(eps,rowvar=False)
-z
-#%%
 tob = np.loadtxt("data/year." + str(it) + ".1.dat")
 
 obs = np.loadtxt("data/observed." + str(it) + ".1.dat")
 
 compare_orbit(tob[0:minute_steps], obs[0:minute_steps], 'true orbit', 'observed')
 
+t = np.arange(0., T-dt, dt)
 
 x_opt = np.loadtxt("data/assimilation_xzero.2.dat")
 
 x = np.zeros((minute_steps,N))
 scheme = Adjoint(lorenz.gradient, lorenz.gradient_adjoint, N, T, dt, x, obs)
+
+
 
 scheme.cost(x_opt)
 print("x")
