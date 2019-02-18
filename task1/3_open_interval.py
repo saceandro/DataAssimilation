@@ -6,6 +6,7 @@ Created on Fri Nov 24 15:17:20 2017
 @author: yk
 """
 import sys
+import os
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -95,7 +96,7 @@ def plot_orbit(dat):
     
     
 #%%
-N = 40
+N = int(sys.argv[1])
 F = 8
 stddev = 1.
 year = 2
@@ -124,17 +125,22 @@ for seed in seeds:
     print ("observation RMSE: ", np.mean([np.linalg.norm(observed[i] - true_orbit[i])/math.sqrt(N) for i in range(steps)]))
     
     assimilation_xzero = observed[rng.randint(len(observed))]
-    with open('data/assimilation_xzero.' + str(seed) + '.dat', 'w') as ff:
+    
+    pref = '/Users/konta/bitbucket/androsace/dacamp/task1/data/' + str(N) + '/'
+    if not os.path.exists(pref):
+        os.mkdir(pref)
+    
+    with open(pref + 'assimilation_xzero.' + str(seed) + '.dat', 'w') as ff:
         ff.write(("%f\t"*N + "\n") % tuple(assimilation_xzero))
         ff.close()
         
-    with open('data/year.' + str(seed) +'.dat', 'w') as f:
+    with open(pref + 'year.' + str(seed) +'.dat', 'w') as f:
         for i in range(int(steps/2), steps):
             f.write(("%f\t"*N + "\n") % tuple(true_orbit[i,:]))
         f.close()
 
     sparse_orbit = []
-    with open('data/year.' + str(interval) + '.' + str(seed) +'.dat', 'w') as f:
+    with open(pref + 'year.' + str(interval) + '.' + str(seed) +'.dat', 'w') as f:
         for i in range(int(steps/2), steps, interval):
             f.write(("%f\t"*N + "\n") % tuple(true_orbit[i,:]))
             sparse_orbit.append(true_orbit[i,:])
@@ -147,13 +153,13 @@ for seed in seeds:
 #            true_orbit_every6h.append(true_orbit[i,:])
 #        h.close()
 
-    with open('data/observed.' + str(seed) +'.dat', 'w') as f:
+    with open(pref + 'observed.' + str(seed) +'.dat', 'w') as f:
         for i in range(int(steps/2), steps):
             f.write(("%f\t"*N + "\n") % tuple(observed[i,:]))
         f.close()
 
     sparse_obs = []
-    with open('data/observed.' + str(interval) + '.' + str(seed) +'.dat', 'w') as f:
+    with open(pref + 'observed.' + str(interval) + '.' + str(seed) +'.dat', 'w') as f:
         for i in range(int(steps/2), steps, interval):
             f.write(("%f\t"*N + "\n") % tuple(observed[i,:]))
             sparse_obs.append(observed[i,:])
@@ -168,7 +174,7 @@ for seed in seeds:
     
 #    np.savetxt("data/cov." + str(seed) + ".dat", np.cov(np.transpose(np.asarray(observed_every6h))))
     
-    np.savetxt("data/cov." + str(interval) + "." + str(seed) + ".dat", np.cov(np.transpose(np.asarray(sparse_obs))))
+    np.savetxt(pref + "cov." + str(interval) + "." + str(seed) + ".dat", np.cov(np.transpose(np.asarray(sparse_obs))))
     
 #    plot_orbit(np.asarray(true_orbit_every6h))
 #    plot_orbit(np.asarray(observed_every6h))

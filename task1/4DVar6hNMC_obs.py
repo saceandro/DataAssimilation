@@ -218,7 +218,7 @@ from scipy.optimize import minimize
 
 N = 40
 F = 8
-year = 0.03
+year = 0.01
 
 
 day = 365 * year

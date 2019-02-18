@@ -543,7 +543,7 @@ from scipy.optimize import minimize
 
 N = 7
 F = 8
-T = 10.
+T = 0.1
 dt = 0.01
 steps = int(T/dt) + 1
 
